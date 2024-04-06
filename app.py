@@ -1,18 +1,16 @@
 import streamlit as st
-
 import pandas as pd
 import requests
 from io import StringIO
 
 # Function to load data from a URL
 def load_data(url):
-    # Assuming the CSV is accessible at a URL
     response = requests.get(url)
     csv_data = StringIO(response.text)
     df = pd.read_csv(csv_data)
     return df
 
-# URL of the CSV file (Update with the actual URL)
+# URL of the CSV file
 csv_url = 'https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv'
 
 # Load data
@@ -22,18 +20,18 @@ df = load_data(csv_url)
 st.title('Cocktail Finder')
 
 # User inputs
-num_ingredients = st.number_input('Number of Ingredients', min_value=1, max_value=10, value=3)
+num_ingredients = st.number_input('Number of Ingredients', min_value=1, max_value=20, value=3)
 alcohol_base = st.text_input('Type of Alcohol Base').lower()
-tool = st.selectbox('Uses a Strainer or Shaker', ['Strainer', 'Shaker', 'Either']).lower()
+glassware = st.selectbox('Select Glassware', ['Coupe', 'Martini', 'Tin Cup'])
 
-# Filter based on inputs
-# Adjusting for 'ingredients' as the column for the type of alcohol base
-filtered_df = df[df['ingredients'].str.lower().str.contains(alcohol_base)]
+# Filtering based on the presence of the alcohol base in the 'Ingredients' column
+filtered_df = df[df['Ingredients'].str.lower().str.contains(alcohol_base)]
 
-if tool != 'either':
-    filtered_df = filtered_df[filtered_df['Tool'].str.lower() == tool]
-
+# Filtering for cocktails that match the user-specified number of ingredients
 filtered_df = filtered_df[filtered_df['Ingredients'].apply(lambda x: len(x.split(',')) == num_ingredients)]
+
+# Filtering based on the 'Glassware' selection
+filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
 
 # Display results
 if not filtered_df.empty:
