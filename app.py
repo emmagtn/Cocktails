@@ -3,24 +3,15 @@ import pandas as pd
 import requests
 from io import StringIO
 
-# Function to load data from a URL
+# Function to load data from a URL into a DataFrame
 def load_data(url):
     response = requests.get(url)
     csv_data = StringIO(response.text)
     df = pd.read_csv(csv_data)
     return df
 
-# URL of the CSV file
-csv_url = 'https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv'
-
-# Load data
-df = load_data(csv_url)
-
-# Sidebar for selecting tabs
-selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "My Liquor Cabinet", "Cocktail Explorer", "Favourites"])
-
-# Streamlit UI based on selected tab
-if selected_tab == "Hello Mixologist":
+# Display the welcome message and story
+def display_welcome_message():
     st.title("Hello Mixologist")
     st.write("Welcome to the Cocktail Finder!")
     st.write("This website helps you discover new cocktails based on the ingredients you have at home.")
@@ -36,8 +27,8 @@ if selected_tab == "Hello Mixologist":
     st.write("And now, it's your turn to explore and create your own cocktail adventures!")
     st.write("Stay tuned for more updates!")
 
-
-elif selected_tab == "My Liquor Cabinet":
+# Display the liquor cabinet selection UI
+def display_liquor_cabinet(df):
     st.title("My Liquor Cabinet")
     st.write("Welcome to your Liquor Cabinet!")
     st.write("Here, you can list the assortment of alcohol and glasses you have.")
@@ -46,7 +37,8 @@ elif selected_tab == "My Liquor Cabinet":
     st.write("Next, let's select the glasses you have:")
     # TODO: Add code to select and save the assortment of glasses
 
-elif selected_tab == "Cocktail Explorer":
+# Explore cocktails based on selections
+def cocktail_explorer(df):
     st.title("Cocktail Explorer")
     st.write("Welcome to the Cocktail Explorer!")
     st.write("Here, you can explore various cocktails based on your preferences.")
@@ -86,7 +78,7 @@ elif selected_tab == "Cocktail Explorer":
     filtered_df['num_ingredients'] = filtered_df['Ingredients'].apply(lambda x: len(x.split(',')))
     filtered_df = filtered_df[filtered_df['num_ingredients'] <= max_ingredients]
 
-    # If 'Any' glassware is selected, do not apply glassware filter
+     # If 'Any' glassware is selected, do not apply glassware filter
     if glassware != 'Any':
         filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
 
@@ -96,9 +88,27 @@ elif selected_tab == "Cocktail Explorer":
     else:
         st.write('No cocktails found.')
 
-elif selected_tab == "Favourites":
+# Display favorites
+def display_favorites(df):
     st.title("Favourites")
     st.write("Welcome to your Favourites!")
     st.write("Here, you can view and manage your favorite cocktails.")
     st.write("Explore the cocktails you've rated highly and revisit them anytime.")
     # TODO: Add code to display and manage favorite cocktails
+
+
+def main():
+    df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
+    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "My Liquor Cabinet", "Cocktail Explorer", "Favourites"])
+    
+    if selected_tab == "Hello Mixologist":
+        display_welcome_message()
+    elif selected_tab == "My Liquor Cabinet":
+        display_liquor_cabinet(df)
+    elif selected_tab == "Cocktail Explorer":
+        cocktail_explorer(df)
+    elif selected_tab == "Favourites":
+        display_favorites(df)
+
+if __name__ == "__main__":
+    main()
