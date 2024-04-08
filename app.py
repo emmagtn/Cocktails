@@ -27,15 +27,74 @@ def display_welcome_message():
     st.write("And now, it's your turn to explore and create your own cocktail adventures!")
     st.write("Stay tuned for more updates!")
 
-# Display the liquor cabinet selection UI
-def display_liquor_cabinet(df):
+def display_liquor_cabinet():
     st.title("My Liquor Cabinet")
     st.write("Welcome to your Liquor Cabinet!")
-    st.write("Here, you can list the assortment of alcohol and glasses you have.")
-    st.write("Let's start by selecting the alcohol you have:")
-    # TODO: Add code to select and save the assortment of alcohol
-    st.write("Next, let's select the glasses you have:")
-    # TODO: Add code to select and save the assortment of glasses
+    st.write("Here, you can list the assortment of alcohol you have.")
+
+    # List of alcohol bases
+    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 
+                     'Vermouth', 'Liqueurs', 'Absinthe', 'Aquavit', 'Sake', 
+                     'Sherry', 'Port', 'Cachaça', 'Pisco', 'Mezcal', 
+                     'Aguardiente', 'Soju', 'Baijiu', 'Grappa']
+
+    # Initialize selected_alcohols in session state if not already present
+    if 'selected_alcohols' not in st.session_state:
+        st.session_state['selected_alcohols'] = []
+
+    # Create a row of 5 columns for alcohol checkboxes
+    num_columns = 5
+    columns = st.columns(num_columns)
+    updated_selected_alcohols = st.session_state['selected_alcohols'].copy()
+    
+    for i, alcohol in enumerate(alcohol_bases):
+        col_index = i % num_columns
+        if columns[col_index].checkbox(alcohol, key=alcohol, value=alcohol in st.session_state['selected_alcohols']):
+            if alcohol not in updated_selected_alcohols:
+                updated_selected_alcohols.append(alcohol)
+        elif alcohol in updated_selected_alcohols:
+            updated_selected_alcohols.remove(alcohol)
+    
+    # Update session state after iteration
+    st.session_state['selected_alcohols'] = updated_selected_alcohols
+
+    # Display the selected alcohol bases
+    st.write("which glasses do u have at home:")
+    for selected_alcohol in st.session_state['selected_alcohols']:
+        st.write(f"- {selected_alcohol}")
+
+    # ***Define glass_types here, before using it for rows calculation***
+    glass_types = [
+        'Punch Bowl', 'Collins', 'Coupe', 'Tin Cup', 'Martini', 'Rocks Glass', 
+        'Nick & Nora', 'Flip Glass', 'Tiki glass', 'Demitasse Glass', 
+        'Footed Rocks Glass', 'Etched Rocks Glass', 'Canadian Glencairn Glass', 
+        'Vintage Glass', 'Double Old Fashioned Glass', 'Crystal Rocks', 'Shot Glass', 
+        'V-Shaped Rocks Glass', 'Hurricane Glass', 'Tiki Cat Glass', 
+        'Bamboo Highball Glass', 'Tumbler', 'Egg Coupe', 'Port Glass', 
+        'Smoked Glass', 'Highball Glass', 'Stemmed Cordial Glass', 'Cocktail Glass', 
+        'Wine Glass', 'Old Fashioned Glass', 'Mug', 'Large Balloon Glass', 'Bucket',
+        'Pilsner Glass', 'Goblet', 'Royal Coupette', 'Copita Glass', 'Shorty Beer',
+        'Double Rocks Glass', 'Glass Mug', 'Stemless Wine Glass', 'Lowball Glass', 
+        'Irish Coffee Mug', 'Julep Cup', 'Fizz Glass', 'Lager', 'Small tumbler', 'Snifter',
+        'Champagne Flute', 'Copper Mug', 'Coffee Mug', 'Large Antique Vintage Shaker', 'Beer Glass'
+    ]
+
+    if 'selected_glasses' not in st.session_state:
+        st.session_state['selected_glasses'] = []
+
+    num_columns = 5
+    rows = (len(glass_types) + num_columns - 1) // num_columns
+    for i in range(rows):
+        cols = st.columns(num_columns)
+        for j in range(num_columns):
+            idx = i * num_columns + j
+            if idx < len(glass_types):
+                glass = glass_types[idx]
+                if cols[j].checkbox(glass, key=glass, value=glass in st.session_state['selected_glasses']):
+                    if glass not in st.session_state['selected_glasses']:
+                        st.session_state['selected_glasses'].append(glass)
+                elif glass in st.session_state['selected_glasses']:
+                    st.session_state['selected_glasses'].remove(glass)
 
 # Explore cocktails based on selections
 def cocktail_explorer(df):
@@ -104,7 +163,7 @@ def main():
     if selected_tab == "Hello Mixologist":
         display_welcome_message()
     elif selected_tab == "My Liquor Cabinet":
-        display_liquor_cabinet(df)
+        display_liquor_cabinet()
     elif selected_tab == "Cocktail Explorer":
         cocktail_explorer(df)
     elif selected_tab == "Favourites":
