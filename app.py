@@ -82,7 +82,7 @@ def display_liquor_cabinet():
     if 'selected_glasses' not in st.session_state:
         st.session_state['selected_glasses'] = []
 
-    num_columns = 5
+    num_columns = 4
     rows = (len(glass_types) + num_columns - 1) // num_columns
     for i in range(rows):
         cols = st.columns(num_columns)
