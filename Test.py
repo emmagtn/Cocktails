@@ -25,21 +25,33 @@ csv_url = 'https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv'
 # Load data
 df = load_data(csv_url)
 
-# Initialize session state for liquor cabinet
-if 'my_liquor_cabinet' not in st.session_state:
-    st.session_state['my_liquor_cabinet'] = []
-
 # Streamlit UI setup
 st.title('Choose your liquor cabinet')
 
 # Multi-select box for choosing liquors
 selected_liquors = st.multiselect('Select your liquors:', options=['Whisky', 'Vodka', 'Tequila', 'Gin'])
 
-# Button to save the selection
-if st.button('Save Selection'):
-    st.session_state['my_liquor_cabinet'] = selected_liquors
-    st.success('Your liquor cabinet has been updated!')
+# Function to filter cocktails based on selected liquors
+def filter_cocktails(dataframe, liquors):
+    if liquors:
+        mask = dataframe['Ingredients'].str.contains('|'.join([liquor for liquor in liquors]), case=False, na=False)
+        filtered_df = dataframe[mask]
+        return filtered_df
+    return pd.DataFrame()
 
-# Display the current contents of the liquor cabinet
-st.write('Your current liquor cabinet contains:', st.session_state['my_liquor_cabinet'])
+# Apply filter
+filtered_df = filter_cocktails(df, selected_liquors)
 
+# Select only the necessary columns
+columns_to_display = ['Cocktail Name', 'Ingredients', 'Garnish', 'Notes']
+filtered_df = filtered_df[columns_to_display]
+
+# Randomly select 10 cocktails if there are enough
+if not filtered_df.empty:
+    if len(filtered_df) > 10:
+        sampled_df = filtered_df.sample(n=10)
+        st.table(sampled_df)
+    else:
+        st.table(filtered_df)
+else:
+    st.write("No cocktails found with the selected liquors.")
