@@ -163,36 +163,47 @@ def manage_liquor_cabinet():
         st.success('Your liquor cabinet has been updated!')
 
 def display_favorites(df):
+    """Display the favorites tab with visualizations of liked cocktails and their alcohol bases."""
     st.title('Your Favorite Cocktails')
-    total_cocktails = len(df)
-    liked_cocktails = len(st.session_state.get('favorites', []))
-    
+    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                     'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
+
+    # Check if there are any liked cocktails in session state
     if 'favorites' in st.session_state and st.session_state['favorites']:
-        favorite_cocktails = df[df['Cocktail Name'].isin(st.session_state['favorites'])]
-        alcohol_count = favorite_cocktails['Alcohol Base'].value_counts(normalize=True) * 100
-        alcohol_labels = alcohol_count.index
-        alcohol_sizes = alcohol_count.values
+        total_cocktails = len(df)
+        liked_cocktails = len(st.session_state['favorites'])
 
-        fig2, ax2 = plt.subplots()
-        ax2.pie(alcohol_sizes, labels=alcohol_labels, autopct='%1.1f%%', startangle=90)
-        ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        st.pyplot(fig2)
-
+        # Display each liked cocktail from the session state favorites
+        st.subheader('Liked Cocktails:')
         for favorite in st.session_state['favorites']:
             st.write(favorite)
-        
-        # Calculate liked and yet to like percentages
+
+        # Create pie chart to display the proportion of liked vs yet-to-like cocktails
         liked_percent = (liked_cocktails / total_cocktails) * 100
         yet_to_like_percent = 100 - liked_percent
-        
-        # Pie chart data for liked vs yet-to-like
-        sizes = [liked_percent, yet_to_like_percent]
-        labels = ['Liked', 'Yet to Like']
-        colors = ['#ff9999','#66b3ff']
         fig1, ax1 = plt.subplots()
-        ax1.pie(sizes, colors=colors, labels=labels, autopct='%1.1f%%', startangle=90)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        ax1.pie([liked_percent, yet_to_like_percent], labels=['Liked', 'Yet to Like'], colors=['#ff9999', '#66b3ff'], autopct='%1.1f%%', startangle=90)
+        ax1.axis('equal')  # Ensures pie chart is drawn as a circle
         st.pyplot(fig1)
+
+        # Obtain favorite cocktail details for alcohol base distribution
+        favorite_cocktails = df[df['Cocktail Name'].isin(st.session_state['favorites'])]
+        alcohol_base_count = {base: 0 for base in alcohol_bases}
+        
+        # Count each alcohol base occurrence in the favorites
+        for index, row in favorite_cocktails.iterrows():
+            for base in alcohol_bases:
+                if base in row['Ingredients']:  # Assuming 'Ingredients' column has the alcohol bases listed
+                    alcohol_base_count[base] += 1
+
+        # Bar chart for alcohol base distribution
+        fig2, ax2 = plt.subplots()
+        ax2.bar(alcohol_base_count.keys(), alcohol_base_count.values(), color='blue')
+        ax2.set_ylabel('Counts')
+        ax2.set_title('Alcohol Base Distribution in Liked Cocktails')
+        ax2.set_xticklabels(alcohol_base_count.keys(), rotation=45, ha='right')
+        st.pyplot(fig2)
+
     else:
         st.write("You haven't liked any cocktails yet.")
 
