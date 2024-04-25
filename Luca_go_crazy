@@ -2,19 +2,18 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import StringIO
-import random
 import re
 
 def load_data(url):
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Raises HTTPError for bad responses
+        response.raise_for_status()
         csv_data = StringIO(response.text)
         df = pd.read_csv(csv_data)
         return df
     except requests.RequestException as e:
         st.error(f"Failed to retrieve data: {e}")
-        return pd.DataFrame()  # Return empty DataFrame on error
+        return pd.DataFrame()
 
 def display_welcome_message():
     st.title("Hello Mixologist")
@@ -57,7 +56,13 @@ def display_cocktail_search(df):
             for index, row in results.iterrows():
                 st.text(f"Cocktail Name: {row['Cocktail Name']}")
                 st.text(f"Ingredients: {row['Ingredients']}")
-                st.text("")  # Empty line for spacing
+                if st.checkbox("Like", key=row['Cocktail Name']):
+                    if row['Cocktail Name'] not in st.session_state.get('favorites', []):
+                        st.session_state.setdefault('favorites', []).append(row['Cocktail Name'])
+                else:
+                    if row['Cocktail Name'] in st.session_state.get('favorites', []):
+                        st.session_state['favorites'].remove(row['Cocktail Name'])
+                st.text("")
         else:
             st.write("No cocktails found with that name.")
 
@@ -159,8 +164,8 @@ def manage_liquor_cabinet():
 
 def display_favorites():
     st.title('Your Favorite Cocktails')
-    if 'favorites' in st.session_state and st.session_state.favorites:
-        for favorite in st.session_state.favorites:
+    if 'favorites' in st.session_state and st.session_state['favorites']:
+        for favorite in st.session_state['favorites']:
             st.write(favorite)
     else:
         st.write("You haven't liked any cocktails yet.")
