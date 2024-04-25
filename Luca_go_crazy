@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import StringIO
-import re
+import matplotlib.pyplot as plt
 
 def load_data(url):
     try:
@@ -162,13 +162,40 @@ def manage_liquor_cabinet():
         st.session_state['my_liquor_cabinet'] = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
         st.success('Your liquor cabinet has been updated!')
 
-def display_favorites():
+def display_favorites(df):
     st.title('Your Favorite Cocktails')
+    total_cocktails = len(df)
+    liked_cocktails = len(st.session_state.get('favorites', []))
+    
     if 'favorites' in st.session_state and st.session_state['favorites']:
+        favorite_cocktails = df[df['Cocktail Name'].isin(st.session_state['favorites'])]
+        alcohol_count = favorite_cocktails['Alcohol Base'].value_counts(normalize=True) * 100
+        alcohol_labels = alcohol_count.index
+        alcohol_sizes = alcohol_count.values
+
+        fig2, ax2 = plt.subplots()
+        ax2.pie(alcohol_sizes, labels=alcohol_labels, autopct='%1.1f%%', startangle=90)
+        ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        st.pyplot(fig2)
+
         for favorite in st.session_state['favorites']:
             st.write(favorite)
+        
+        # Calculate liked and yet to like percentages
+        liked_percent = (liked_cocktails / total_cocktails) * 100
+        yet_to_like_percent = 100 - liked_percent
+        
+        # Pie chart data for liked vs yet-to-like
+        sizes = [liked_percent, yet_to_like_percent]
+        labels = ['Liked', 'Yet to Like']
+        colors = ['#ff9999','#66b3ff']
+        fig1, ax1 = plt.subplots()
+        ax1.pie(sizes, colors=colors, labels=labels, autopct='%1.1f%%', startangle=90)
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        st.pyplot(fig1)
     else:
         st.write("You haven't liked any cocktails yet.")
+
 
 def main():
     df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
@@ -183,8 +210,7 @@ def main():
     elif selected_tab == "Manage Liquor Cabinet":
         manage_liquor_cabinet()
     elif selected_tab == "My Favorites":
-        display_favorites()
+        display_favorites(df)
 
 if __name__ == "__main__":
     main()
-
