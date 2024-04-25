@@ -2,172 +2,152 @@ import streamlit as st
 import pandas as pd
 import requests
 from io import StringIO
+import random
+import re
 
-# Function to load data from a URL into a DataFrame
 def load_data(url):
-    response = requests.get(url)
-    csv_data = StringIO(response.text)
-    df = pd.read_csv(csv_data)
-    return df
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises HTTPError for bad responses
+        csv_data = StringIO(response.text)
+        df = pd.read_csv(csv_data)
+        return df
+    except requests.RequestException as e:
+        st.error(f"Failed to retrieve data: {e}")
+        return pd.DataFrame()  # Return empty DataFrame on error
 
-# Display the welcome message and story
 def display_welcome_message():
     st.title("Hello Mixologist")
-    st.write("Welcome to the Cocktail Finder!")
-    st.write("This website helps you discover new cocktails based on the ingredients you have at home.")
-    st.write("Let me tell you a short story:")
-    st.write("Once upon a time, nestled in the cozy dorms of the HSG campus, there lived a spirited young student named Emily. Now, Emily wasn't just any ordinary student – she harbored a burning passion for mixology, despite her limited collection of alcohol at home. With only a few bottles of assorted spirits tucked away in her pantry, she dreamed of concocting dazzling cocktails that would dazzle her friends and classmates.")
-    st.write("But Emily was faced with a predicament: how could she create masterful cocktails with such a meager selection of ingredients? Undeterred, she embarked on a whimsical journey to unravel the mysteries of mixology, armed with nothing but her enthusiasm and a handful of liquor bottles.")
-    st.write("Her first attempt at mixology was nothing short of comical. With a bottle of vodka, a splash of cranberry juice, and a squeeze of lime, she attempted to craft her own version of a classic Cosmopolitan. However, her proportions were far from perfect, resulting in a drink that was more reminiscent of cough syrup than a sophisticated cocktail. Undeterred by her initial failure, Emily soldiered on, determined to refine her skills and create drinks worthy of admiration.")
-    st.write("As her journey progressed, Emily's passion for mixology only grew stronger. She spent countless hours scouring the internet for cocktail recipes, experimenting with different combinations of ingredients, and honing her bartending techniques. From simple highballs to elaborate tiki concoctions, Emily fearlessly explored the vast and colorful world of mixology, one drink at a time")
-    st.write("But Emily's adventures weren't just confined to her dorm room. She ventured beyond the confines of campus, seeking inspiration from local bars and cocktail lounges. With wide-eyed wonder, she observed seasoned bartenders expertly crafting cocktails, their graceful movements and meticulous attention to detail captivating her imagination.")
-    st.write("With each sip of a new cocktail, Emily discovered a world of flavors and sensations she never knew existed. From the tangy bite of a margarita to the smoky richness of an old-fashioned, each drink told a story of its own, inviting her to embark on a journey of exploration and discovery.")
-    st.write("And so, armed with newfound knowledge and a boundless sense of curiosity, Emily's journey into the enchanting realm of mixology continued, fueled by her unwavering passion and a thirst for adventure.")
-    st.write("As the sun set on another day at HSG, Emily raised her glass to the endless possibilities that lay ahead, knowing that her quest to master the art of mixology was only just beginning. And with a mischievous twinkle in her eye, she whispered to herself, 'Here's to the next cocktail adventure!'")
-    st.write("And now, it's your turn to explore and create your own cocktail adventures!")
-    st.write("Stay tuned for more updates!")
-
-def display_liquor_cabinet():
-    st.title("My Liquor Cabinet")
-    st.write("Welcome to your Liquor Cabinet!")
-    st.write("Here, you can list the assortment of alcohol you have.")
-
-    # List of alcohol bases
-    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 
-                     'Vermouth', 'Liqueurs', 'Absinthe', 'Aquavit', 'Sake', 
-                     'Sherry', 'Port', 'Cachaça', 'Pisco', 'Mezcal', 
-                     'Aguardiente', 'Soju', 'Baijiu', 'Grappa']
-
-    # Initialize selected_alcohols in session state if not already present
-    if 'selected_alcohols' not in st.session_state:
-        st.session_state['selected_alcohols'] = []
-
-    # Create a row of 5 columns for alcohol checkboxes
-    num_columns = 5
-    columns = st.columns(num_columns)
-    updated_selected_alcohols = st.session_state['selected_alcohols'].copy()
+    st.write("""
+        Welcome to our cocktail exploration tool! Here you can search for cocktails,
+        filter by various criteria, or even manage your own virtual liquor cabinet.
+        Choose a tab to get started and discover the perfect mix for your next gathering.
+    """)
+####in case u like this i wrote it myself and then allowed chatgpt to spice it up####
     
-    for i, alcohol in enumerate(alcohol_bases):
-        col_index = i % num_columns
-        if columns[col_index].checkbox(alcohol, key=alcohol, value=alcohol in st.session_state['selected_alcohols']):
-            if alcohol not in updated_selected_alcohols:
-                updated_selected_alcohols.append(alcohol)
-        elif alcohol in updated_selected_alcohols:
-            updated_selected_alcohols.remove(alcohol)
+
+    st.title("Welcome to the Cocktail Connoisseur App!")
     
-    # Update session state after iteration
-    st.session_state['selected_alcohols'] = updated_selected_alcohols
+    st.markdown("""
+        Welcome to the **Cocktail Connoisseur App**, your gateway to mastering the art of cocktail making. 
+        By using this app, you'll not only broaden your drinking horizons and refine your palate but also dazzle your friends with your newfound mixology skills.
+        
+        This app was crafted by three university students eager to expand their horizons beyond the routine gin and tonics and screwdrivers. 
+        Through developing this app, they broke free from the mundane, embracing a world of vibrant and diverse cocktails.
+        
+        ## How Does This App Work?
+        The app boasts two core features designed to help you discover your perfect cocktail:
+        
+        ### Cocktail Search
+        - **Search Function**: Allows you to look up a cocktail by name. If it exists in our extensive database, you can view detailed information including ingredients, preparation instructions, ideal glassware, and additional tips.
+        
+        ### Cocktail Filter
+        - **Filter Function**: Enables you to find cocktails based on specific criteria such as the number of ingredients, preferred alcohol base, desired glassware, and the overall vibe of the cocktail. After setting your filters, the app will display all matching cocktails. Just click on one to see more about it, similar to the search function.
+        
+        Dive in and start exploring the rich world of cocktails with us!
+    """)
 
-    # Display the selected alcohol bases
-    st.write("which glasses do u have at home:")
-    for selected_alcohol in st.session_state['selected_alcohols']:
-        st.write(f"- {selected_alcohol}")
+def display_cocktail_search(df):
+    st.title("Cocktail Search")
+    search_query = st.text_input("Search for a cocktail")
+    if search_query:
+        results = df[df['Cocktail Name'].str.contains(search_query, case=False, na=False)]
+        if not results.empty:
+            st.subheader("Search Results:")
+            for index, row in results.iterrows():
+                st.text(f"Cocktail Name: {row['Cocktail Name']}")
+                st.text(f"Ingredients: {row['Ingredients']}")
+                st.text("")  # Empty line for spacing
+        else:
+            st.write("No cocktails found with that name.")
 
-    # ***Define glass_types here, before using it for rows calculation***
-    glass_types = [
-        'Punch Bowl', 'Collins', 'Coupe', 'Tin Cup', 'Martini', 'Rocks Glass', 
-        'Nick & Nora', 'Flip Glass', 'Tiki glass', 'Demitasse Glass', 
-        'Footed Rocks Glass', 'Etched Rocks Glass', 'Canadian Glencairn Glass', 
-        'Vintage Glass', 'Double Old Fashioned Glass', 'Crystal Rocks', 'Shot Glass', 
-        'V-Shaped Rocks Glass', 'Hurricane Glass', 'Tiki Cat Glass', 
-        'Bamboo Highball Glass', 'Tumbler', 'Egg Coupe', 'Port Glass', 
-        'Smoked Glass', 'Highball Glass', 'Stemmed Cordial Glass', 'Cocktail Glass', 
-        'Wine Glass', 'Old Fashioned Glass', 'Mug', 'Large Balloon Glass', 'Bucket',
-        'Pilsner Glass', 'Goblet', 'Royal Coupette', 'Copita Glass', 'Shorty Beer',
-        'Double Rocks Glass', 'Glass Mug', 'Stemless Wine Glass', 'Lowball Glass', 
-        'Irish Coffee Mug', 'Julep Cup', 'Fizz Glass', 'Lager', 'Small tumbler', 'Snifter',
-        'Champagne Flute', 'Copper Mug', 'Coffee Mug', 'Large Antique Vintage Shaker', 'Beer Glass'
-    ]
+def display_cocktail_filter(df):
+    st.title("Cocktail Filter")
+    # Inputs for filtering
+    num_ingredients = st.selectbox("Number of Ingredients", options=['Any'] + list(range(1, 11)))
+    glassware_options = ['Any'] + sorted(df['Glassware'].dropna().unique().tolist())
+    glassware = st.selectbox("Type of Glassware", options=glassware_options)
+    
+    # Alcohol selection for filter, adding to the cabinet
+    st.write("Select additional alcohols to add to your cabinet:")
+    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                     'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
+    cols = st.columns(4)
+    quarter = len(alcohol_bases) // 4
+    for i in range(4):
+        with cols[i]:
+            for alcohol in alcohol_bases[i * quarter: (i + 1) * quarter + (0 if i < 3 else len(alcohol_bases) % 4)]:
+                if st.checkbox(alcohol, key=f"filter_{alcohol}", value=alcohol in st.session_state.get('my_liquor_cabinet', [])):
+                    if alcohol not in st.session_state['my_liquor_cabinet']:
+                        st.session_state['my_liquor_cabinet'].append(alcohol)
 
-    if 'selected_glasses' not in st.session_state:
-        st.session_state['selected_glasses'] = []
+    # Save and display buttons
+    if st.button('Update and Save Cabinet'):
+        st.session_state['my_liquor_cabinet'] = [alcohol for alcohol in alcohol_bases if st.session_state.get(f"filter_{alcohol}", False)]
+        st.success('Your liquor cabinet has been updated!')
 
-    num_columns = 4
-    rows = (len(glass_types) + num_columns - 1) // num_columns
-    for i in range(rows):
-        cols = st.columns(num_columns)
-        for j in range(num_columns):
-            idx = i * num_columns + j
-            if idx < len(glass_types):
-                glass = glass_types[idx]
-                if cols[j].checkbox(glass, key=glass, value=glass in st.session_state['selected_glasses']):
-                    if glass not in st.session_state['selected_glasses']:
-                        st.session_state['selected_glasses'].append(glass)
-                elif glass in st.session_state['selected_glasses']:
-                    st.session_state['selected_glasses'].remove(glass)
+    if st.button('Display Cocktails'):
+        # Filtering logic
+        filtered_df = df.copy()
+        if num_ingredients != 'Any':
+            filtered_df = filtered_df[filtered_df['Ingredients'].apply(lambda x: len(x.split(',')) == int(num_ingredients))]
+        if glassware != 'Any':
+            filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
+        
+        # Ensure at least one of the selected alcohol bases is in the ingredients
+        alcohol_regex = '|'.join([re.escape(alcohol) for alcohol in st.session_state.get('my_liquor_cabinet', [])])
+        filtered_df = filtered_df[filtered_df['Ingredients'].str.contains(alcohol_regex, case=False, na=False)]
 
-# Explore cocktails based on selections
-def cocktail_explorer(df):
-    st.title("Cocktail Explorer")
-    st.write("Welcome to the Cocktail Explorer!")
-    st.write("Here, you can explore various cocktails based on your preferences.")
-    st.write("Use the search function to filter cocktails by ingredients, glassware, and more.")
-    st.write("You can also rate cocktails and save your favorites for future reference.")
-
-    # Cocktail Finder Code Starts Here
-    # User input for maximum number of ingredients
-    max_ingredients = st.number_input('Maximum Ingredients', min_value=1, max_value=20, value=5, help="Select the maximum number of ingredients you want in the cocktails.")
-
-    # List of all possible alcohol bases
-    alcohol_base_options = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaça', 'Pisco', 'Mezcal', 'Aguardiente', 'Soju', 'Baijiu', 'Grappa']
-
-    # Filter out alcohol bases that result in no cocktails
-    valid_alcohol_bases = []
-    for alcohol in alcohol_base_options:
-        filtered_df = df[df['Ingredients'].str.lower().str.contains(alcohol.lower())]
+        # Randomly select up to 5 cocktails to display
         if not filtered_df.empty:
-            valid_alcohol_bases.append(alcohol)
+            sample_df = filtered_df.sample(min(len(filtered_df), 5))
+            for index, row in sample_df.iterrows():
+                st.write(f"Cocktail Name: {row['Cocktail Name']}")
+                st.write(f"Ingredients: {row['Ingredients']}")
+                st.write(f"Glassware: {row['Glassware']}")
+                st.write("")
+        else:
+            st.write("No cocktails match your filters.")
 
-    # Dropdown for selecting alcohol base
-    alcohol_base = st.selectbox('Select Alcohol Base', valid_alcohol_bases).lower()
+def manage_liquor_cabinet():
+    st.title('Manage Your Liquor Cabinet')
+    
+    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                     'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
+    
+    # Create four columns
+    cols = st.columns(4)
+    # Calculate number of elements per column
+    per_column = len(alcohol_bases) // 4
+    remainder = len(alcohol_bases) % 4
 
-    # Get unique glassware options
-    glassware_options = df['Glassware'].unique()
+    # Loop through columns and assign alcohol checkboxes
+    for i, col in enumerate(cols):
+        start_index = i * per_column
+        # Add one to the end index in case of an uneven remainder
+        # This ensures that the remaining elements are distributed one per column
+        end_index = start_index + per_column + (1 if i < remainder else 0)
+        with col:
+            for alcohol in alcohol_bases[start_index:end_index]:
+                st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.get('my_liquor_cabinet', []))
 
-    # Prepend 'Any' option to glassware options
-    glassware_options = ['Any'] + list(glassware_options)
-
-    # Select box for glassware
-    glassware = st.selectbox('Select Glassware', glassware_options)
-
-    # Filtered DataFrame initially includes all cocktails
-    filtered_df = df.copy()
-
-    # Filter for cocktails with up to the given maximum number of ingredients
-    filtered_df['num_ingredients'] = filtered_df['Ingredients'].apply(lambda x: len(x.split(',')))
-    filtered_df = filtered_df[filtered_df['num_ingredients'] <= max_ingredients]
-
-     # If 'Any' glassware is selected, do not apply glassware filter
-    if glassware != 'Any':
-        filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
-
-    # Display results
-    if not filtered_df.empty:
-        st.write(filtered_df.drop(columns=['num_ingredients']))  # Drop the temporary 'num_ingredients' column before display
-    else:
-        st.write('No cocktails found.')
-
-# Display favorites
-def display_favorites(df):
-    st.title("Favourites")
-    st.write("Welcome to your Favourites!")
-    st.write("Here, you can view and manage your favorite cocktails.")
-    st.write("Explore the cocktails you've rated highly and revisit them anytime.")
-    # TODO: Add code to display and manage favorite cocktails
-
+    if st.button('Save Liquor Cabinet'):
+        # Update the liquor cabinet in the session state
+        st.session_state['my_liquor_cabinet'] = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
+        st.success('Your liquor cabinet has been updated!')
 
 def main():
     df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
-    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "My Liquor Cabinet", "Cocktail Explorer", "Favourites"])
-    
+    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Cocktail Search", "Cocktail Filter", "Manage Liquor Cabinet"])
     if selected_tab == "Hello Mixologist":
         display_welcome_message()
-    elif selected_tab == "My Liquor Cabinet":
-        display_liquor_cabinet()
-    elif selected_tab == "Cocktail Explorer":
-        cocktail_explorer(df)
-    elif selected_tab == "Favourites":
-        display_favorites(df)
+    elif selected_tab == "Cocktail Search":
+        display_cocktail_search(df)
+    elif selected_tab == "Cocktail Filter":
+        display_cocktail_filter(df)
+    elif selected_tab == "Manage Liquor Cabinet":
+        manage_liquor_cabinet()
 
 if __name__ == "__main__":
     main()
+
