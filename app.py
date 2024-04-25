@@ -72,18 +72,14 @@ def display_cocktail_filter(df):
     st.write("Select additional alcohols to add to your cabinet:")
     alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
                      'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
-    col1, col2 = st.columns(2)
-    half = len(alcohol_bases) // 2
-    with col1:
-        for alcohol in alcohol_bases[:half]:
-            if st.checkbox(alcohol, key=f"filter_{alcohol}", value=alcohol in st.session_state.get('my_liquor_cabinet', [])):
-                if alcohol not in st.session_state['my_liquor_cabinet']:
-                    st.session_state['my_liquor_cabinet'].append(alcohol)
-    with col2:
-        for alcohol in alcohol_bases[half:]:
-            if st.checkbox(alcohol, key=f"filter_{alcohol}", value=alcohol in st.session_state.get('my_liquor_cabinet', [])):
-                if alcohol not in st.session_state['my_liquor_cabinet']:
-                    st.session_state['my_liquor_cabinet'].append(alcohol)
+    cols = st.columns(4)
+    quarter = len(alcohol_bases) // 4
+    for i in range(4):
+        with cols[i]:
+            for alcohol in alcohol_bases[i * quarter: (i + 1) * quarter + (0 if i < 3 else len(alcohol_bases) % 4)]:
+                if st.checkbox(alcohol, key=f"filter_{alcohol}", value=alcohol in st.session_state.get('my_liquor_cabinet', [])):
+                    if alcohol not in st.session_state['my_liquor_cabinet']:
+                        st.session_state['my_liquor_cabinet'].append(alcohol)
 
     # Save and display buttons
     if st.button('Update and Save Cabinet'):
@@ -94,7 +90,7 @@ def display_cocktail_filter(df):
         # Filtering logic
         filtered_df = df.copy()
         if num_ingredients != 'Any':
-            filtered_df = filtered_df[filtered_df['Ingredients'].apply(lambda x: len(x.split(',')) == num_ingredients)]
+            filtered_df = filtered_df[filtered_df['Ingredients'].apply(lambda x: len(x.split(',')) == int(num_ingredients))]
         if glassware != 'Any':
             filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
         
@@ -119,16 +115,24 @@ def manage_liquor_cabinet():
     alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
                      'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
     
-    col1, col2 = st.columns(2)
-    half = len(alcohol_bases) // 2
-    with col1:
-        for alcohol in alcohol_bases[:half]:
-            st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.get('my_liquor_cabinet', []))
-    with col2:
-        for alcohol in alcohol_bases[half:]:
-            st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.get('my_liquor_cabinet', []))
+    # Create four columns
+    cols = st.columns(4)
+    # Calculate number of elements per column
+    per_column = len(alcohol_bases) // 4
+    remainder = len(alcohol_bases) % 4
+
+    # Loop through columns and assign alcohol checkboxes
+    for i, col in enumerate(cols):
+        start_index = i * per_column
+        # Add one to the end index in case of an uneven remainder
+        # This ensures that the remaining elements are distributed one per column
+        end_index = start_index + per_column + (1 if i < remainder else 0)
+        with col:
+            for alcohol in alcohol_bases[start_index:end_index]:
+                st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.get('my_liquor_cabinet', []))
 
     if st.button('Save Liquor Cabinet'):
+        # Update the liquor cabinet in the session state
         st.session_state['my_liquor_cabinet'] = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
         st.success('Your liquor cabinet has been updated!')
 
