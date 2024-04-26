@@ -1,214 +1,176 @@
-# Hi guys, this is meant to be a general template for streamlit to facilitate our workflow.
-# it is meant to be a source for some basic formatting we can all use (like buttons, etc.)
-# make sure to have streamlit and pandas installed down in terminal (pip install streamlit & pip install pandas)
-# how to see it on streamlit: insert down in terminal: streamlit run TEMPLATE_streamlit.py 
-
-
-# First for any file we import streamlit
 import streamlit as st
-
-# Following now there will be some elements that are specifically useful for our app. 
-# DOWN BELOW we have more general resources that are more general functions that we might want to use.
-
-
-# Title and subheader for the welcome page
-st.title('Cocktails on the Go!')
-st.subheader('Fancy an inspiration for Sprittwoch? Discover new cocktails you can mix from your own liquor cabinet.')
-
-# Table of Contents
-st.markdown("""
-## Table of Contents
-1. [My Liquor Cabinet](#my-liquor-cabinet)
-2. [Cocktail Suggestions](#cocktail-suggestions)
-3. [Wishlist](#wishlist)
-4. [My Favorites](#my-favorites)
-""")
-
-# How to: Navigation to different sections
-# This can be achieved by Streamlit's anchors or buttons that will scroll to different parts of the page.
-# maybe we still need to figure that one out...
-
-# NEXT: My liquor cabinet page
-
-st.header('My Liquor Cabinet')  # Chapter title
-# Creating a list of liquor bases -> maybe NOT the way we need to go, since we need to use the API
-liquor_bases = ['Gin', 'Whiskey', 'Vodka', 'Rum', 'Tequila']
-
-# Allowing users to select their available liquors
-selected_bases = st.multiselect('Select the liquor you have:', liquor_bases)
-
-# Button to save selected liquors
-if st.button('Save My Cabinet'):
-    # Save the data to the backend/session state
-    st.session_state['selected_bases'] = selected_bases
-    st.success('Your liquor cabinet has been updated.')
-
-# Button to find drinks from the cabinet
-if st.button('Find Drinks'):
-    # Perform search query using selected_bases
-    # Assume we have a function `find_drinks` that takes the selected bases and returns a list of drink recipes
-    drink_suggestions = find_drinks(selected_bases)
-    # Save drink suggestions to session state
-    st.session_state['drink_suggestions'] = drink_suggestions
-
-
-# NEXT: Result of our liquor selection
-
-st.header('Cocktail Suggestions')
-
-# Display drink suggestions from session state if available
-if 'drink_suggestions' in st.session_state:
-    for drink in st.session_state['drink_suggestions'][:5]:  # Only show 5 suggestions
-        st.write(drink)  # Display each drink suggestion
-        # Include a button to favorite each drink
-        if st.button(f'Favorite {drink}', key=drink):
-            # Logic to add the drink to favorites
-            pass
-
-    # Button to refresh drink suggestions
-    if st.button('Refresh Suggestions'):
-        # Logic to refresh the drink suggestions
-        pass
-
-
-
-# NEXT: Wishlist page
-
-st.header('Wishlist')
-
-# Similar logic to 'My Liquor Cabinet' page
-# ...
-
-# You can reuse most of the code from 'My Liquor Cabinet' and adjust the variables/function calls as needed.
-
-
-# NEXT: our favorites page
-
-st.header('My Favorite Recipes')
-# Assuming you have a list of favorite recipes stored in 'favorites'
-favorites = ['Margarita', 'Martini']  # Placeholder for favorites list
-
-# Displaying favorites in alphabetical order
-for recipe in sorted(favorites):
-    st.write(recipe)
-    if st.button(f'Delete {recipe} from Favorites'):
-        # Add code to remove the recipe from favorites
-        pass
-
-if st.button('Erase all favorites'):
-    # Add code to erase all favorites
-    pass
-
-# Displaying a pie chart of common alcohol bases in the favorite recipes
-import matplotlib.pyplot as plt
-
-# Sample data for the pie chart
-alcohol_counts = {'Gin': 4, 'Whiskey': 2, 'Vodka': 3}  # This would come from analyzing the 'favorites' list
-fig, ax = plt.subplots()
-ax.pie(alcohol_counts.values(), labels=alcohol_counts.keys(), autopct='%1.1f%%')
-st.pyplot(fig)
-
-if st.button('Reset chart'):
-    # Add code to reset the pie chart based on updated favorites
-    pass
-
-# The above code includes buttons for interaction and a pie chart for data visualization.
-
-
-
-# BELOW: General resources
-
-# Write a title and some text to the app's page.
-st.title('Below: General Streamlit Cheat Sheet for Our Project')
-st.write("This is generic text. Here's our first attempt at using data to create a table:")
-
-# Writing text and data
-# Use `st.write` to print data or messages on the app
-st.write("Hello, you drunken sailor!")
-
-# How to display data
-# How to create a simple dataframe (here we need the pandas, make sure to have pip install pandas in the terminal)
 import pandas as pd
-data = pd.DataFrame({
-  'first column': [1, 2, 3, 4],
-  'second column': [10, 20, 30, 40]
-})
+import requests
+from io import StringIO
+import matplotlib.pyplot as plt
+import re
 
-# Use `st.dataframe` to display the dataframe
-st.dataframe(data)
+# Define alcohol_bases globally
+alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                 'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
 
-# Display charts
-# Use `st.line_chart` to create a line chart of a dataframe
-st.line_chart(data)
+def load_data(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        csv_data = StringIO(response.text)
+        df = pd.read_csv(csv_data)
+        return df
+    except requests.RequestException as e:
+        st.error(f"Failed to retrieve data: {e}")
+        return pd.DataFrame()
 
-# Plotting maps (if you have lat/long data)
-# Use `st.map` to display a map with points on it
-map_data = pd.DataFrame({
-    'lat': [34.0522, 37.7749],
-    'lon': [-118.2437, -122.4194]
-})
+def display_welcome_message():
+    st.title("Welcome to the Cocktail Connoisseur App!")
+    st.markdown("""
+        Welcome to the **Cocktail Connoisseur App**, your gateway to mastering the art of cocktail making. 
+        By using this app, you'll not only broaden your drinking horizons and refine your palate but also dazzle your friends with your newfound mixology skills.
+        
+        This app was crafted by three university students eager to expand their horizons beyond the routine gin and tonics and screwdrivers. 
+        Through developing this app, they broke free from the mundane, embracing a world of vibrant and diverse cocktails.
+        
+        ## How Does This App Work?
+        - **Search Function**: Allows you to look up a cocktail by name. If it exists in our extensive database, you can view detailed information.
+        - **Filter Function**: Enables you to find cocktails based on specific criteria such as the number of ingredients, preferred alcohol base, and desired glassware.
+        
+        Dive in and start exploring the rich world of cocktails with us!
+    """)
 
-st.map(map_data)
+def display_cocktail_search(df):
+    st.title("Cocktail Search")
+    search_query = st.text_input("Search for a cocktail")
+    if search_query:
+        results = df[df['Cocktail Name'].str.contains(search_query, case=False, na=False)]
+        if not results.empty:
+            st.subheader("Search Results:")
+            for index, row in results.iterrows():
+                st.text(f"Cocktail Name: {row['Cocktail Name']}")
+                st.text(f"Ingredients: {row['Ingredients']}")
+                like_key = f"like_{row['Cocktail Name']}_{index}"  # Append index to make the key unique
+                if st.button("Like", key=like_key):
+                    if row['Cocktail Name'] not in st.session_state.favorites:
+                        st.session_state.favorites.append(row['Cocktail Name'])
+                st.text("")  # Empty line for spacing
+        else:
+            st.write("No cocktails found with that name.")
 
-# Use checkboxes for options
-if st.checkbox('Show dataframe'):
-    data = pd.DataFrame({
-      'first column': [1, 2, 3, 4],
-      'second column': [10, 20, 30, 40]
-    })
-    st.write(data)
+def display_cocktail_filter(df):
+    st.title("Cocktail Filter")
+    num_ingredients = st.selectbox("Number of Ingredients", options=['Any'] + list(range(1, 11)))
+    glassware_options = ['Any'] + sorted(df['Glassware'].dropna().unique().tolist())
+    glassware = st.selectbox("Type of Glassware", options=glassware_options)
+    
+    st.write("Select additional alcohols to add to your cabinet:")
+    cols = st.columns(4)
+    quarter = len(alcohol_bases) // 4
+    for i in range(4):
+        with cols[i]:
+            for alcohol in alcohol_bases[i * quarter: (i + 1) * quarter + (0 if i < 3 else len(alcohol_bases) % 4)]:
+                if st.checkbox(alcohol, key=f"filter_{alcohol}", value=alcohol in st.session_state.my_liquor_cabinet):
+                    if alcohol not in st.session_state.my_liquor_cabinet:
+                        st.session_state.my_liquor_cabinet.append(alcohol)
 
-# Use a selectbox for options
-option = st.selectbox(
-    'Which number do you like best?',
-     data['first column'])
+    display_cocktails = st.button('Display Cocktails')
+    if display_cocktails or st.session_state.get('display_cocktails', False):
+        st.session_state['display_cocktails'] = True
+        
+        filtered_df = df.copy()
+        if num_ingredients != 'Any':
+            filtered_df = filtered_df[filtered_df['Ingredients'].apply(lambda x: len(x.split(',')) == int(num_ingredients))]
+        if glassware != 'Any':
+            filtered_df = filtered_df[filtered_df['Glassware'] == glassware]
+        
+        alcohol_regex = '|'.join([re.escape(alcohol) for alcohol in st.session_state.my_liquor_cabinet])
+        filtered_df = filtered_df[filtered_df['Ingredients'].str.contains(alcohol_regex, case=False, na=False)]
 
-'You selected:', option
+        if not filtered_df.empty:
+            st.subheader("Search Results:")
+            for index, row in filtered_df.iterrows():
+                st.text(f"Cocktail Name: {row['Cocktail Name']}")
+                st.text(f"Ingredients: {row['Ingredients']}")
+                like_key = f"like_{row['Cocktail Name']}_{index}"
+                if st.button("Like", key=like_key):
+                    if row['Cocktail Name'] not in st.session_state.favorites:
+                        st.session_state.favorites.append(row['Cocktail Name'])
+                st.text("")  # Empty line for spacing
+        else:
+            st.write("No cocktails match your filters.")
 
-# Add sliders and buttons
-age = st.slider('How old are you?', 0, 130, 25)
-st.write("I'm ", age, 'years old')
+def manage_liquor_cabinet():
+    st.title('Manage Your Liquor Cabinet')
+    cols = st.columns(4)
+    per_column = len(alcohol_bases) // 4
+    remainder = len(alcohol_bases) % 4
+    for i, col in enumerate(cols):
+        with col:
+            start_index = i * per_column
+            end_index = start_index + per_column + (1 if i < remainder else 0)
+            for alcohol in alcohol_bases[start_index:end_index]:
+                st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.my_liquor_cabinet)
+    if st.button('Save Liquor Cabinet'):
+        st.session_state.my_liquor_cabinet = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
+        st.success('Your liquor cabinet has been updated!')
 
-if st.button('Say hello'):
-     st.write('Why hello there')
-else:
-     st.write('Goodbye')
+def display_favorites(df):
+    st.title("My Favorites")
+    if 'favorites' in st.session_state and st.session_state.favorites:
+        st.subheader("Liked Cocktails:")
+        for favorite in st.session_state.favorites:
+            st.write(favorite)
 
-# Layouts & Containers - Use columns to layout widgets side by side
-col1, col2 = st.columns(2)
-with col1:
-    st.header('A cat')
-    st.image('https://static.streamlit.io/examples/cat.jpg') # this inserts a picture
+        total_cocktails = len(df)
+        liked_cocktails = len(st.session_state.favorites)
+        labels = ['Liked Cocktails', 'Total Cocktails']
+        sizes = [liked_cocktails, total_cocktails - liked_cocktails]
+        explode = (0.1, 0)
+        colors = ['#ffcc99', '#66b3ff']
 
-with col2:
-    st.header('A dog')
-    st.image('https://static.streamlit.io/examples/dog.jpg')
+        fig1, ax1 = plt.subplots()
+        ax1.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+        ax1.axis('equal')
+        st.pyplot(fig1)
 
-# Caching - speed up your app by caching data
-@st.cache
-def expensive_computation():
-    # ... some expensive computation ...
-    return result
+        base_count = {base: 0 for base in alcohol_bases}
+        for cocktail in st.session_state.favorites:
+            ingredients = df.loc[df['Cocktail Name'] == cocktail, 'Ingredients'].values[0]
+            for base in alcohol_bases:
+                if base.lower() in ingredients.lower():
+                    base_count[base] += 1
 
-# Session state - persist state across reruns -> this is to add counts up, it's aggregated in the increment function
-if 'count' not in st.session_state:
-    st.session_state.count = 0
+        bases = [base for base in base_count if base_count[base] > 0]
+        counts = [base_count[base] for base in bases]
+        fig2, ax2 = plt.subplots()
+        ax2.pie(counts, labels=bases, autopct='%1.1f%%', startangle=90)
+        ax2.axis('equal')
+        st.markdown("### You are made of:")  # Using markdown to style the header similarly
+        st.pyplot(fig2)
 
-increment = st.button('Increment')
-if increment:
-    st.session_state.count += 1
+        if st.button('Reset Likes'):
+            st.session_state.favorites = []
+            st.success('Your liked cocktails have been reset!')
+    else:
+        st.write("You haven't liked any cocktails yet.")
 
-st.write('Count = ', st.session_state.count)
+def main():
+    # Initialize session state if it hasn't been initialized already
+    if 'my_liquor_cabinet' not in st.session_state:
+        st.session_state['my_liquor_cabinet'] = []
+    if 'favorites' not in st.session_state:
+        st.session_state['favorites'] = []
 
-# Sidebar - add widgets to a sidebar -> maybe these can be used as tabs
-st.sidebar.write("Here are some cool widgets:")
+    df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
+    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Cocktail Search", "Cocktail Filter", "Manage Liquor Cabinet", "My Favorites"])
 
-# Display interactive widgets in the sidebar
-add_selectbox = st.sidebar.selectbox(
-    "How would you like to be contacted?",
-    ("Email", "Home phone", "Mobile phone")
-)
+    if selected_tab == "Hello Mixologist":
+        display_welcome_message()
+    elif selected_tab == "Cocktail Search":
+        display_cocktail_search(df)
+    elif selected_tab == "Cocktail Filter":
+        display_cocktail_filter(df)
+    elif selected_tab == "Manage Liquor Cabinet":
+        manage_liquor_cabinet()
+    elif selected_tab == "My Favorites":
+        display_favorites(df)
 
-# Execute the file with streamlit run [filename]
-# in our case: streamlit run TEMPLATE_streamlit.py
-
+if __name__ == "__main__":
+    main()
