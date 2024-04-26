@@ -21,20 +21,33 @@ def load_data(url):
         return pd.DataFrame()
 
 def display_welcome_message():
-    st.title("Welcome to the Cocktail Connoisseur App!")
-    st.markdown("""
-        Welcome to the **Cocktail Connoisseur App**, your gateway to mastering the art of cocktail making. 
-        By using this app, you'll not only broaden your drinking horizons and refine your palate but also dazzle your friends with your newfound mixology skills.
-        
-        This app was crafted by three university students eager to expand their horizons beyond the routine gin and tonics and screwdrivers. 
-        Through developing this app, they broke free from the mundane, embracing a world of vibrant and diverse cocktails.
-        
-        ## How Does This App Work?
-        - **Search Function**: Allows you to look up a cocktail by name. If it exists in our extensive database, you can view detailed information.
-        - **Filter Function**: Enables you to find cocktails based on specific criteria such as the number of ingredients, preferred alcohol base, and desired glassware.
-        
-        Dive in and start exploring the rich world of cocktails with us!
-    """)
+    st.title('Welcome to the Cocktail Connoisseur App')
+
+    st.markdown('''
+    Dive into the art of cocktail making and expand your mixology horizons with the Cocktail Connoisseur App! 
+    Whether you're looking to dazzle your friends with your newfound skills or simply enjoy exploring new flavors, 
+    this app is your ultimate guide.
+
+    **By using this app, you can:**
+    - Broaden your drinking repertoire.
+    - Refine your palate.
+    - Impress friends with your mixology prowess.
+
+    **Our Story:**
+    Seven business students, eager to move beyond basic gin and tonics and screwdrivers, created this app. 
+    Their goal? To explore the sophisticated world of cocktails and share their passion with like-minded enthusiasts.
+
+    **How Does This App Work?**
+    - **Search Function**: Look up any cocktail by name. If it’s in our extensive database, you'll find detailed information about it.
+    - **Filter Function**: Find cocktails based on specific criteria such as ingredient count, preferred alcohol base, 
+    available liquor in your cabinet, and desired glassware.
+    - **Manage Liquor Cabinet**: This feature lets you monitor and manage the contents of your liquor cabinet effortlessly.
+    - **My Favorites**: Keep track of your favorite cocktails and see statistics on your preferences, including a 
+    detailed pie chart showing your favorite alcohol bases.
+
+    Embark on your mixology journey with us and start exploring the rich world of cocktails today!
+    ''')
+
 
 def display_cocktail_search(df):
     st.title("Cocktail Search")
