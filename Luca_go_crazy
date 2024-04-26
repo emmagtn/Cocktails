@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from io import StringIO
 import matplotlib.pyplot as plt
+import re
 
 def load_data(url):
     try:
@@ -111,29 +112,21 @@ def display_cocktail_filter(df):
                 st.write(f"Ingredients: {row['Ingredients']}")
                 st.write(f"Glassware: {row['Glassware']}")
                 st.write("")
+                # Initialize favorites if it doesn't exist in session_state
+                if 'favorites' not in st.session_state:
+                    st.session_state.favorites = []
+                
+                # Display cocktails with a checkbox to like them
+                if st.checkbox(f"Like {row['Cocktail Name']}", key=f"like_{row['Cocktail Name']}"):
+                    if row['Cocktail Name'] not in st.session_state.favorites:
+                        st.session_state.favorites.append(row['Cocktail Name'])
+                else:
+                    if row['Cocktail Name'] in st.session_state.favorites:
+                        st.session_state.favorites.remove(row['Cocktail Name'])
+
         else:
             st.write("No cocktails match your filters.")
-        
-        # Initialize favorites if it doesn't exist in session_state
-        if 'favorites' not in st.session_state:
-            st.session_state.favorites = []
-        
-        # Display cocktails with a checkbox to like them
-        for index, row in sample_df.iterrows():
-            # Add a like checkbox for each cocktail
-            if st.checkbox(f"Like {row['Cocktail Name']}", key=f"like_{row['Cocktail Name']}"):
-                # If checked, add to the favorites list
-                if row['Cocktail Name'] not in st.session_state.favorites:
-                    st.session_state.favorites.append(row['Cocktail Name'])
-            else:
-                # If unchecked, remove from the favorites list if it's there
-                if row['Cocktail Name'] in st.session_state.favorites:
-                    st.session_state.favorites.remove(row['Cocktail Name'])
 
-            st.write(f"Cocktail Name: {row['Cocktail Name']}")
-            st.write(f"Ingredients: {row['Ingredients']}")
-            st.write(f"Glassware: {row['Glassware']}")
-            st.write("")
 
 def manage_liquor_cabinet():
     st.title('Manage Your Liquor Cabinet')
@@ -196,12 +189,18 @@ def display_favorites(df):
                 if base in row['Ingredients']:  # Assuming 'Ingredients' column has the alcohol bases listed
                     alcohol_base_count[base] += 1
 
-        # Bar chart for alcohol base distribution
+        # Convert count dictionary to values suitable for pie chart display
+        bases = list(alcohol_base_count.keys())
+        counts = list(alcohol_base_count.values())
+
+        # Only include bases with counts greater than zero
+        bases = [base for base, count in zip(bases, counts) if count > 0]
+        counts = [count for count in counts if count > 0]
+
+        # Pie chart for alcohol base distribution
         fig2, ax2 = plt.subplots()
-        ax2.bar(alcohol_base_count.keys(), alcohol_base_count.values(), color='blue')
-        ax2.set_ylabel('Counts')
-        ax2.set_title('Alcohol Base Distribution in Liked Cocktails')
-        ax2.set_xticklabels(alcohol_base_count.keys(), rotation=45, ha='right')
+        ax2.pie(counts, labels=bases, autopct='%1.1f%%', startangle=90)
+        ax2.axis('equal')  # Ensures pie chart is drawn as a circle
         st.pyplot(fig2)
 
     else:
