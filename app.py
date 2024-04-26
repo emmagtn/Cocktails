@@ -5,6 +5,10 @@ from io import StringIO
 import matplotlib.pyplot as plt
 import re
 
+# Define alcohol_bases globally
+alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                 'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
+
 def load_data(url):
     try:
         response = requests.get(url)
@@ -40,7 +44,13 @@ def display_cocktail_search(df):
         if not results.empty:
             st.subheader("Search Results:")
             for index, row in results.iterrows():
-                display_cocktail_info(row)
+                st.text(f"Cocktail Name: {row['Cocktail Name']}")
+                st.text(f"Ingredients: {row['Ingredients']}")
+                like_key = f"like_{row['Cocktail Name']}"
+                if st.button("Like", key=like_key):
+                    if row['Cocktail Name'] not in st.session_state.get('favorites', []):
+                        st.session_state.setdefault('favorites', []).append(row['Cocktail Name'])
+                st.text("")  # Empty line for spacing
         else:
             st.write("No cocktails found with that name.")
 
@@ -51,8 +61,6 @@ def display_cocktail_filter(df):
     glassware = st.selectbox("Type of Glassware", options=glassware_options)
     
     st.write("Select additional alcohols to add to your cabinet:")
-    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
-                     'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
     cols = st.columns(4)
     quarter = len(alcohol_bases) // 4
     for i in range(4):
@@ -78,14 +86,18 @@ def display_cocktail_filter(df):
 
         if not filtered_df.empty:
             for index, row in filtered_df.iterrows():
-                display_cocktail_info(row)
+                st.write(f"Cocktail Name: {row['Cocktail Name']}")
+                st.write(f"Ingredients: {row['Ingredients']}")
+                like_key = f"like_{row['Cocktail Name']}"
+                if st.button("Like", key=like_key):
+                    if row['Cocktail Name'] not in st.session_state.get('favorites', []):
+                        st.session_state.setdefault('favorites', []).append(row['Cocktail Name'])
+                st.write("")  # Empty line for spacing
         else:
             st.write("No cocktails match your filters.")
 
 def manage_liquor_cabinet():
     st.title('Manage Your Liquor Cabinet')
-    alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
-                     'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal']
     cols = st.columns(4)
     per_column = len(alcohol_bases) // 4
     remainder = len(alcohol_bases) % 4
@@ -102,8 +114,9 @@ def manage_liquor_cabinet():
 def display_favorites(df):
     st.title("My Favorites")
     if 'favorites' in st.session_state and st.session_state['favorites']:
-        for cocktail in st.session_state['favorites']:
-            st.write(cocktail)
+        st.subheader("Liked Cocktails:")
+        for favorite in st.session_state['favorites']:
+            st.write(favorite)
 
         total_cocktails = len(df)
         liked_cocktails = len(st.session_state['favorites'])
@@ -117,34 +130,26 @@ def display_favorites(df):
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         st.pyplot(fig1)
 
-        # Alcohol base distribution pie chart
         base_count = {base: 0 for base in alcohol_bases}
-        for base in alcohol_bases:
-            for cocktail in st.session_state['favorites']:
-                if base in df.loc[df['Cocktail Name'] == cocktail, 'Ingredients'].values[0]:
+        for cocktail in st.session_state['favorites']:
+            ingredients = df.loc[df['Cocktail Name'] == cocktail, 'Ingredients'].values[0]
+            for base in alcohol_bases:
+                if base.lower() in ingredients.lower():
                     base_count[base] += 1
 
         bases = [base for base in base_count if base_count[base] > 0]
         counts = [base_count[base] for base in bases]
         fig2, ax2 = plt.subplots()
         ax2.pie(counts, labels=bases, autopct='%1.1f%%', startangle=90)
-        ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        ax2.axis('equal')
+        st.write("You are made of:")
         st.pyplot(fig2)
-
-        if st.button('Refresh'):
-            st.session_state['favorites'] = []
-
     else:
         st.write("You haven't liked any cocktails yet.")
 
-def display_cocktail_info(row):
-    st.write(f"Cocktail Name: {row['Cocktail Name']}")
-    st.write(f"Ingredients: {row['Ingredients']}")
-    like_key = f"like_{row['Cocktail Name']}"
-    if st.button("Like", key=like_key):
-        if row['Cocktail Name'] not in st.session_state.get('favorites', []):
-            st.session_state.setdefault('favorites', []).append(row['Cocktail Name'])
-    st.write("")  # Empty line for spacing
+def reset_likes():
+    st.session_state['favorites'] = []
+    st.success('Your liked cocktails have been reset!')
 
 def main():
     if 'my_liquor_cabinet' not in st.session_state:
@@ -153,8 +158,8 @@ def main():
         st.session_state['favorites'] = []
 
     df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
-    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Cocktail Search", "Cocktail Filter", "Manage Liquor Cabinet", "My Favorites"])
-    
+    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Cocktail Search", "Cocktail Filter", "Manage Liquor Cabinet", "My Favorites", "Reset Likes"])
+
     if selected_tab == "Hello Mixologist":
         display_welcome_message()
     elif selected_tab == "Cocktail Search":
@@ -165,6 +170,8 @@ def main():
         manage_liquor_cabinet()
     elif selected_tab == "My Favorites":
         display_favorites(df)
+    elif selected_tab == "Reset Likes":
+        reset_likes()
 
 if __name__ == "__main__":
     main()
