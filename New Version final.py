@@ -98,16 +98,30 @@ def display_cocktail_filter(df):
 
         if not filtered_df.empty:
             st.subheader("Search Results:")
+    
+        # Use Streamlit's expander to group cocktail details neatly
             for index, row in filtered_df.iterrows():
-                st.text(f"Cocktail Name: {row['Cocktail Name']}")
-                st.text(f"Ingredients: {row['Ingredients']}")
-                like_key = f"like_{row['Cocktail Name']}_{index}"
-                if st.button("Like", key=like_key):
-                    if row['Cocktail Name'] not in st.session_state.favorites:
-                        st.session_state.favorites.append(row['Cocktail Name'])
-                st.text("")  # Empty line for spacing
+                with st.expander(f"{row['Cocktail Name']}"):
+                    #split ingrediants in string
+                    ingredients_list = row['Ingredients'].split(',')
+
+                    # Displaying ingredients in a bulleted list
+                    st.write("**Ingredients:**")
+                    for ingredient in ingredients_list:
+                        st.write(f"- {ingredient.strip()}")  # .strip() removes any leading/trailing whitespace
+                    st.write(f"**Preparation:** {row['Preparation']}")
+                    st.write(f"**Garnish:** {row['Garnish']}")
+                    st.write(f"**Glassware:** {row['Glassware']}")
+                    st.write(f"**Bartender:** {row['Bartender']}")
+                    st.write(f"**Location:** {row['Location']}")
+
+            like_key = f"like_{row['Cocktail Name']}_{index}"
+            if st.button("Like", key=like_key):
+                if row['Cocktail Name'] not in st.session_state.get('favorites', []):
+                    st.session_state.favorites = st.session_state.get('favorites', []) + [row['Cocktail Name']]
+            st.write("")  # Empty line for spacing
         else:
-            st.write("No cocktails match your filters.")
+             st.warning("No cocktails match your filters.")
 
 def manage_liquor_cabinet():
     st.title('Manage Your Liquor Cabinet')
