@@ -115,11 +115,11 @@ def display_cocktail_filter(df):
                     st.write(f"**Bartender:** {row['Bartender']}")
                     st.write(f"**Location:** {row['Location']}")
 
-            like_key = f"like_{row['Cocktail Name']}_{index}"
-            if st.button("Like", key=like_key):
-                if row['Cocktail Name'] not in st.session_state.get('favorites', []):
-                    st.session_state.favorites = st.session_state.get('favorites', []) + [row['Cocktail Name']]
-            st.write("")  # Empty line for spacing
+                    like_key = f"like_{row['Cocktail Name']}_{index}"
+                    if st.button("Like", key=like_key):
+                        if row['Cocktail Name'] not in st.session_state.get('favorites', []):
+                            st.session_state.favorites = st.session_state.get('favorites', []) + [row['Cocktail Name']]
+                    st.write("")  # Empty line for spacing
         else:
              st.warning("No cocktails match your filters.")
 
