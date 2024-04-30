@@ -80,7 +80,7 @@ def display_cocktail_search(df):
 
 def display_cocktail_filter(df):
     st.title("Cocktail Filter")
-    num_ingredients = st.selectbox("Number of Ingredients", options=['Any'] + list(range(1, 11)))
+    num_ingredients = st.selectbox("Maximum Number of Ingredients", options=['Any'] + list(range(1, 11)))
     glassware_options = ['Any'] + sorted(df['Glassware'].dropna().unique().tolist())
     glassware = st.selectbox("Type of Glassware", options=glassware_options)
     
