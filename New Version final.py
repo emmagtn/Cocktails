@@ -48,6 +48,20 @@ def display_welcome_message():
     Embark on your mixology journey with us and start exploring the rich world of cocktails today!
     ''')
 
+def manage_liquor_cabinet():
+    st.title('Manage Your Liquor Cabinet')
+    cols = st.columns(4)
+    per_column = len(alcohol_bases) // 4
+    remainder = len(alcohol_bases) % 4
+    for i, col in enumerate(cols):
+        with col:
+            start_index = i * per_column
+            end_index = start_index + per_column + (1 if i < remainder else 0)
+            for alcohol in alcohol_bases[start_index:end_index]:
+                st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.my_liquor_cabinet)
+    if st.button('Save Liquor Cabinet'):
+        st.session_state.my_liquor_cabinet = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
+        st.success('Your liquor cabinet has been updated!')
 
 def display_cocktail_search(df):
     st.title("Cocktail Search")
@@ -133,21 +147,6 @@ def display_cocktail_filter(df):
         else:
              st.warning("No cocktails match your filters.")
 
-def manage_liquor_cabinet():
-    st.title('Manage Your Liquor Cabinet')
-    cols = st.columns(4)
-    per_column = len(alcohol_bases) // 4
-    remainder = len(alcohol_bases) % 4
-    for i, col in enumerate(cols):
-        with col:
-            start_index = i * per_column
-            end_index = start_index + per_column + (1 if i < remainder else 0)
-            for alcohol in alcohol_bases[start_index:end_index]:
-                st.checkbox(alcohol, key=alcohol, value=alcohol in st.session_state.my_liquor_cabinet)
-    if st.button('Save Liquor Cabinet'):
-        st.session_state.my_liquor_cabinet = [alcohol for alcohol in alcohol_bases if st.session_state.get(alcohol, False)]
-        st.success('Your liquor cabinet has been updated!')
-
 def display_favorites(df):
     st.title("My Favorites")
     if 'favorites' in st.session_state and st.session_state.favorites:
@@ -189,23 +188,22 @@ def display_favorites(df):
         st.write("You haven't liked any cocktails yet.")
 
 def main():
-    # Initialize session state if it hasn't been initialized already
     if 'my_liquor_cabinet' not in st.session_state:
         st.session_state['my_liquor_cabinet'] = []
     if 'favorites' not in st.session_state:
         st.session_state['favorites'] = []
 
     df = load_data('https://github.com/OzanGenc/CocktailAnalysis/raw/main/cocktails.csv')
-    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Cocktail Search", "Cocktail Filter", "Manage Liquor Cabinet", "My Favorites"])
+    selected_tab = st.sidebar.radio("Select Tab", ["Hello Mixologist", "Manage Liquor Cabinet", "Cocktail Search", "Cocktail Filter", "My Favorites"])
 
     if selected_tab == "Hello Mixologist":
         display_welcome_message()
+    elif selected_tab == "Manage Liquor Cabinet":
+        manage_liquor_cabinet()
     elif selected_tab == "Cocktail Search":
         display_cocktail_search(df)
     elif selected_tab == "Cocktail Filter":
         display_cocktail_filter(df)
-    elif selected_tab == "Manage Liquor Cabinet":
-        manage_liquor_cabinet()
     elif selected_tab == "My Favorites":
         display_favorites(df)
 
