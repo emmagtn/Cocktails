@@ -23,6 +23,10 @@ def load_data(url):
 def display_welcome_message():
     st.title('Welcome to the Cocktail Connoisseur App')
 
+    # Displaying an image of a cocktail bar with the provided URL
+    image_url = 'https://media.guestofaguest.com/t_article_content/gofg-media/2020/02/1/53239/83688932_1183344105191648_3383560581132931295_n_(3).jpg'
+    st.image(image_url, caption='Elegant Cocktail Bar')
+
     st.markdown('''
     Dive into the art of cocktail making and expand your mixology horizons with the Cocktail Connoisseur App! 
     Whether you're looking to dazzle your friends with your newfound skills or simply enjoy exploring new flavors, 
