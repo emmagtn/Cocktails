@@ -23,7 +23,7 @@ def load_data(url):
         st.error(f"Failed to retrieve data: {e}")
         return pd.DataFrame()
 
-#Opening tab (Tab 1): Welcome to the App. Images and text. 
+#Tab 1: Welcome Page. Images and text. 
 def display_welcome_message():
     st.title('Welcome to the Cocktail Connoisseur App')
 
@@ -171,7 +171,11 @@ def display_cocktail_filter(df):
              st.warning("No cocktails match your filters.")
 
 #Tab 5: My Favorites 
-#Code written with the help of ChatGPT4. Prompt:
+#Code written with the help of ChatGPT4. 
+    #Prompt:
+        #Adapt code that the like checkmark box is below every cocktail title when search and if the like check mark is presse it saves the cocktail 
+        #to the favorites list which would then print the favorites list on the last tab, this should be adapted  for both the tabs search cocktail 
+        #and filter cocktail: [input entire code]
 def display_favorites(df):
     st.title("My Favorites")
     if 'favorites' in st.session_state and st.session_state.favorites:
@@ -193,7 +197,13 @@ def display_favorites(df):
         st.pyplot(fig1)
 
         #Creation of our second pie chart --> Which Alcohols our user is made of. 
-        #Code written with the help of ChatGPT4. Prompt:
+        #Code written with the help of ChatGPT4. 
+            #Prompt: 
+                #edit the code so that when a cocktail title is like then their will be a search for each selected titles row of the dataset for all the alchol basis represented in this alchol_ bases definition: 
+                #alcohol_bases = ['Vodka', 'Rum', 'Gin', 'Tequila', 'Whiskey', 'Brandy', 'Vermouth', 'Liqueurs', 
+                #'Absinthe', 'Aquavit', 'Sake', 'Sherry', 'Port', 'Cachaca', 'Pisco', 'Mezcal'] then count the amount each alchol base comes up and display a graph chart , keep the rest of the code as is and show the editing in snippets , edit this following code :
+                #display_favorites(df): [(...) c.f. Code Lines 179-184I'l]
+      
         base_count = {base: 0 for base in alcohol_bases}
         for cocktail in st.session_state.favorites:
             ingredients = df.loc[df['Cocktail Name'] == cocktail, 'Ingredients'].values[0]
