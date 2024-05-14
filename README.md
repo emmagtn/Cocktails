@@ -42,3 +42,5 @@ Contributions are welcome. If you wish to contribute, please fork the repository
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
 
+## Warning the read me was completely writteb by chatgpt as it was not a mandatory aspect of the task, but it may help the analyser understand the code faster.
+
